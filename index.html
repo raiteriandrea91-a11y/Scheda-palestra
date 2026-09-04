@@ -7,7 +7,7 @@
 
 <!-- PWA: rende l'app installabile sulla schermata home del telefono -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1B8E56">
+<meta name="theme-color" content="#1A1C20">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="Le tue schede di allenamento, pesi, sforzo e progressi settimana dopo settimana.">
 
@@ -175,7 +175,7 @@
     border-radius:14px; font-size:14px; font-weight:600; padding:13px 0; cursor:pointer;
   }
 
-  .pyramid-card{background:var(--card); border:none; box-shadow:var(--shadow-sm); border-radius:var(--radius); padding:16px; margin-bottom:10px;}
+  .pyramid-card{background:var(--card); border:none; box-shadow:var(--shadow-sm); border-radius:var(--radius); padding:16px; margin-bottom:10px; transition:opacity .2s ease, filter .2s ease;}
   .pyramid-card .ex-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
   .ex-name{font-size:15px; font-weight:600; color:var(--ink);}
   .ex-scheme{font-size:12.5px; color:var(--ink-dim); margin-top:3px;}
@@ -184,7 +184,9 @@
   .ex-card{
     display:flex; flex-direction:column; gap:2px; background:var(--card); border:none; box-shadow:var(--shadow-sm);
     border-left:4px solid transparent; border-radius:18px; padding:14px 15px; margin-bottom:9px;
+    transition:opacity .2s ease, filter .2s ease;
   }
+  .ex-card.no-data, .pyramid-card.no-data{opacity:.6; filter:grayscale(.55);}
   .ex-main{display:flex; align-items:center; gap:10px;}
   .ex-card.pr-flash{animation:prflash 1.1s ease;}
   @keyframes prflash{
@@ -224,7 +226,7 @@
   .rpe-label{font-size:10.5px; color:var(--ink-faint); font-weight:700; letter-spacing:.05em; text-transform:uppercase;}
   .rpe-value{font-size:12px; font-weight:700; color:var(--ink);}
   .rpe-row.inactive .rpe-value{color:var(--ink-faint); font-weight:600;}
-  .rpe-bars{display:flex; align-items:flex-end; justify-content:space-between; height:28px; padding:2px 0; cursor:pointer; touch-action:none; -webkit-user-select:none; user-select:none;}
+  .rpe-bars{display:flex; align-items:flex-end; justify-content:space-between; height:28px; padding:2px 0; cursor:pointer; touch-action:pan-y; -webkit-user-select:none; user-select:none;}
   .rpe-bar{width:3px; border-radius:2px 2px 1px 1px; background:var(--card-border); transition:background .12s ease;}
 
   .edit-row{display:flex; gap:6px; margin-top:9px; flex-wrap:wrap; align-items:center;}
@@ -1730,9 +1732,10 @@ function renderExercises(){
       const isPR = (exType==='weight' && !isVariable && w!==undefined && prevMax!==undefined && w>prevMax);
       const sugg = (exType==='weight' && !isVariable) ? recommendedWeight(it.id, state.currentWeek, group) : undefined;
       const rpeVal = getRPE(it.id, state.currentWeek);
+      const hasData = (w!==undefined) || hasVariableLog || (rpeVal!==undefined);
 
       const card=document.createElement('div');
-      card.className = group.pyramid ? 'pyramid-card' : ('ex-card'+(it.choice?' choice':''));
+      card.className = (group.pyramid ? 'pyramid-card' : ('ex-card'+(it.choice?' choice':''))) + (hasData?'':' no-data');
       card.dataset.dragid = it.id;
 
       let delta='', pct='';
@@ -1968,12 +1971,36 @@ function renderExercises(){
       if(valSpan) valSpan.textContent = v!==undefined ? (fmt(v) + ' · ' + rpeLabel(v)) : 'Non impostato';
     }
     bars.addEventListener('pointerdown', e=>{
-      e.preventDefault();
-      updateVisual(valueFromClientX(e.clientX));
-      const onMove = ev=>updateVisual(valueFromClientX(ev.clientX));
+      const isTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
+      const startX = e.clientX, startY = e.clientY;
+      const THRESHOLD = 6;
+      let locked = isTouch ? null : true; // touch: aspetta di capire la direzione del gesto
+
+      if(!isTouch){
+        e.preventDefault();
+        updateVisual(valueFromClientX(e.clientX));
+      }
+
+      const onMove = ev=>{
+        if(locked === null){
+          const dx = ev.clientX - startX, dy = ev.clientY - startY;
+          if(Math.abs(dx) < THRESHOLD && Math.abs(dy) < THRESHOLD) return;
+          if(Math.abs(dy) > Math.abs(dx)){
+            // gesto verticale: è uno scroll della pagina, non tocchiamo lo sforzo
+            locked = false;
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+            return;
+          }
+          locked = true;
+        }
+        ev.preventDefault();
+        updateVisual(valueFromClientX(ev.clientX));
+      };
       const onUp = ev=>{
         document.removeEventListener('pointermove', onMove);
         document.removeEventListener('pointerup', onUp);
+        if(locked === false) return;
         const vFinal = valueFromClientX(ev.clientX);
         updateVisual(vFinal);
         setRPE(exId, state.currentWeek, vFinal);

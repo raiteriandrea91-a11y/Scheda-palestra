@@ -9,7 +9,7 @@
   è così che il telefono capisce che deve scaricare la nuova versione
   invece di continuare a mostrare quella salvata in cache.
 */
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `scheda-palestra-${CACHE_VERSION}`;
 
 const APP_SHELL = [

@@ -9,7 +9,7 @@
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#EEF1F5",
-  "theme_color": "#1B8E56",
+  "theme_color": "#1A1C20",
   "lang": "it",
   "dir": "ltr",
   "categories": ["health", "fitness", "sports"],
