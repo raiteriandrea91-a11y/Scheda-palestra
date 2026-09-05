@@ -54,6 +54,24 @@
     --safe-b: env(safe-area-inset-bottom, 0px);
   }
 
+  [data-theme="dark"]{
+    --bg: #16181C;
+    --bg-elev: #1D2025;
+    --card: #1F2226;
+    --card-hi: #262A30;
+    --card-border: #2E3238;
+    --ink: #F1F2F4;
+    --ink-dim: #A5AAB2;
+    --ink-faint: #6E737B;
+    --gold: #E8B563;
+    --green: #3DBE74;
+    --red: #FF6B60;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.38), 0 2px 12px rgba(0,0,0,.30);
+    --shadow-md: 0 4px 20px rgba(0,0,0,.42);
+  }
+  [data-theme="dark"] .toast.pr{background:#332B14; color:#F0C978;}
+  [data-theme="dark"] input, [data-theme="dark"] textarea{color-scheme: dark;}
+
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
   body{
@@ -252,6 +270,16 @@
 
   /* ---------- Footer ---------- */
   footer{padding:22px 16px 26px; display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+  .theme-block{width:100%; margin-bottom:6px;}
+  .theme-label{font-size:11.5px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:9px;}
+  .theme-row{display:flex; gap:8px;}
+  .theme-btn{
+    flex:1; padding:11px 6px; border-radius:12px; border:1.5px solid var(--card-border);
+    background:var(--card); color:var(--ink-dim); font-size:12.5px; font-weight:600; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px; box-shadow:var(--shadow-sm);
+  }
+  .theme-btn .ic{font-size:16px;}
+  .theme-btn.active{background:var(--accent); border-color:var(--accent); color:#fff;}
   .ghost-btn{font-size:12.5px; font-weight:600; color:var(--ink-dim); background:var(--card); border:none; box-shadow:var(--shadow-sm); border-radius:12px; padding:10px 14px; cursor:pointer;}
   .foot-note{width:100%; font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
   #importFile{display:none;}
@@ -431,7 +459,15 @@
 
 <div id="statsView" style="display:none;"></div>
 
-<footer>
+<footer id="settingsFooter">
+  <div class="theme-block">
+    <div class="theme-label">Tema</div>
+    <div class="theme-row" id="themeRow">
+      <button class="theme-btn" data-theme-choice="light"><span class="ic">☀️</span>Chiaro</button>
+      <button class="theme-btn" data-theme-choice="dark"><span class="ic">🌙</span>Scuro</button>
+      <button class="theme-btn" data-theme-choice="system"><span class="ic">⚙️</span>Sistema</button>
+    </div>
+  </div>
   <button class="ghost-btn" id="exportBtn">Esporta backup (.json)</button>
   <button class="ghost-btn" id="importBtn">Importa backup</button>
   <input type="file" id="importFile" accept="application/json">
@@ -589,11 +625,11 @@ function defaultState(){
     weights[it.id] = Object.assign({}, it.initW || {});
     delete it.initW;
   })));
-  return { days, schede, currentScheda:schede[0].id, currentDay:'d4', currentWeek:1, weeksCount:8, weights, notes:{}, rpe:{}, bodyweight:{}, actualSets:{}, actualReps:{} };
+  return { days, schede, currentScheda:schede[0].id, currentDay:'d4', currentWeek:1, weeksCount:8, weights, notes:{}, rpe:{}, bodyweight:{}, actualSets:{}, actualReps:{}, theme:'system' };
 }
 function mergeLoadedState(saved){
   if(!saved || !saved.days) return defaultState();
-  const merged = Object.assign({ currentDay:'d4', currentWeek:1, weeksCount:8, weights:{}, notes:{}, rpe:{}, bodyweight:{}, actualSets:{}, actualReps:{} }, saved);
+  const merged = Object.assign({ currentDay:'d4', currentWeek:1, weeksCount:8, weights:{}, notes:{}, rpe:{}, bodyweight:{}, actualSets:{}, actualReps:{}, theme:'system' }, saved);
   if(!merged.schede || !merged.schede.length){
     const existingDayIds = new Set(merged.days.map(d=>d.id));
     const schede = JSON.parse(JSON.stringify(SEED_SCHEDE)).map(s=>({...s, dayIds:s.dayIds.filter(id=>existingDayIds.has(id))}));
@@ -607,14 +643,42 @@ function mergeLoadedState(saved){
   if(!merged.currentScheda) merged.currentScheda = merged.schede[0].id;
   return merged;
 }
+const PREVIEW_BACKUP_STATE = {"currentDay":"d_he6tyj","currentWeek":1,"weeksCount":3,"weights":{"d4g0e1":{},"d4g0e2":{},"d4g1e1":{},"d4g1e2":{},"d4g1e3":{},"d4g1e4":{},"d4g1e5":{},"d4g1e6":{},"d4g2e1":{},"d4g2e2":{},"d4g2e3":{},"d4g2e4":{},"d4g2e5":{},"ex_exx7tc":{"1":35,"2":35,"3":35},"ex_vk94hc":{"1":20,"2":20,"3":20},"ex_vc8u9t":{"1":45,"2":45,"3":45},"ex_t8fipy":{"1":30,"2":30,"3":30},"ex_e5g28a":{"1":25,"2":25,"3":25},"ex_uf2zcv":{"1":25,"2":25,"3":25},"ex_7ytdok":{"1":6,"2":6,"3":6},"ex_30t742":{"1":6,"2":6,"3":6},"ex_1ilni5":{"1":8,"2":8,"3":8},"ex_dvzq80":{"1":36,"2":36,"3":36}},"notes":{"ex_e5g28a":{"1":"Dolore parte interna quadricipite destro"}},"rpe":{"ex_exx7tc":{"1":7.5},"ex_vk94hc":{"1":8.5},"ex_vc8u9t":{"1":7},"ex_t8fipy":{"1":7.5},"ex_e5g28a":{"1":7},"ex_uf2zcv":{"1":6.5},"ex_7ytdok":{"1":5.5},"ex_30t742":{"1":8},"ex_spv1yy":{},"ex_p5ys95":{"1":8},"ex_b02vvc":{"1":8},"ex_dvzq80":{"1":8},"ex_1ilni5":{},"ex_uhxk2b":{},"ex_2up00k":{},"ex_zyh44x":{},"ex_r9yfnd":{},"ex_ihgujv":{},"ex_28ox7n":{},"ex_otzvv2":{},"ex_1gshkr":{},"ex_598gn1":{}},"bodyweight":{},"actualSets":{},"actualReps":{},"days":[{"id":"d1","num":"GIORNO 1","focus":"Petto & Tricipiti","color":"day1","groups":[{"id":"g_2cffbm","note":"Riscaldamento","pyramid":false,"items":[{"id":"ex_r9yfnd","choice":false,"name":"Tapis Roulant","type":"cardio","durationMin":8,"scheme":"8 min"}]},{"id":"g_e3nhyh","note":"Petto principale","pyramid":false,"items":[{"id":"ex_gukzzi","choice":false,"name":"Bench Press","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":3,"weightMode":"fixed","rest":60}]},{"id":"g_m1o38g","note":"Petto (2 a scelta)","pyramid":false,"items":[{"id":"ex_rmq2ei","choice":false,"name":"Spinte manubri","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_otzvv2","choice":false,"name":"Pectoral","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_vb2hnv","choice":false,"name":"Croci con manubri","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_uhxk2b","choice":false,"name":"Dip","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_zyh44x","choice":false,"name":"P45 Multipower","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60}]},{"id":"g_7wburk","note":"Tricipiti (2 a scelta)","pyramid":false,"items":[{"id":"ex_e1o306","choice":false,"name":"Head crush manubri","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_xl9798","choice":false,"name":"Head crush bilanciere","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_s3czgj","choice":false,"name":"Head crush corda","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_2up00k","choice":false,"name":"Corda","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":60},{"id":"ex_x92snd","choice":false,"name":"Piegamenti mani unite","type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"rest":60}]},{"id":"g_6zlyjb","note":"Addominali","pyramid":false,"items":[{"id":"ex_ihgujv","choice":false,"name":"Crunch alti","type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20,"rest":60},{"id":"ex_j2t9fo","choice":false,"name":"Crunch bassi","type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20,"rest":60},{"id":"ex_uzvjju","choice":false,"name":"Libretto","type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":15,"rest":60}]},{"id":"g_tltyfi","note":"Cardio","pyramid":false,"items":[{"id":"ex_o47iyr","choice":false,"name":"Cyclette","type":"cardio","durationMin":45,"scheme":"45 min"}]}]},{"id":"d2","num":"GIORNO 2","focus":"Dorso & Bicipiti","color":"day2","groups":[]},{"id":"d3","num":"GIORNO 3","focus":"Gambe & Spalle","color":"day3","groups":[]},{"id":"d_he6tyj","num":"Giorno 1","focus":"Total Body","color":"day4","groups":[{"id":"g_bpzncg","note":"Riscaldamento","pyramid":false,"items":[{"id":"ex_1ilni5","choice":false,"name":"Tapis roulant","type":"cardio","durationMin":8,"scheme":"8 min"}]},{"id":"g_47ci5f","note":"Core","pyramid":false,"items":[{"id":"ex_exx7tc","choice":false,"name":"Chest press","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_vk94hc","choice":false,"name":"Pectoral","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_vc8u9t","choice":false,"name":"Pulldown","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_t8fipy","choice":false,"name":"Low row","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_e5g28a","choice":false,"name":"Leg extension","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_uf2zcv","choice":false,"name":"Leg curl","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_7ytdok","choice":false,"name":"Lento manubri","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_30t742","choice":false,"name":"Bicipiti manubri","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed","rest":50},{"id":"ex_spv1yy","choice":false,"name":"Tricipiti","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"}]},{"id":"g_141pvq","note":"Addominali","pyramid":false,"items":[{"id":"ex_p5ys95","choice":false,"name":"Crunch","type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"rest":50},{"id":"ex_b02vvc","choice":false,"name":"Bassi","type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"rest":50}]},{"id":"g_8ddtci","note":"Cardio","pyramid":false,"items":[{"id":"ex_dvzq80","choice":false,"name":"Cyclette","type":"cardio","durationMin":35,"scheme":"35 min"}]}]},{"id":"d_b4yfk8","num":"Giorno 2","focus":"Nuovo giorno","color":"day5","groups":[{"id":"g_kefbwr","note":"Riscaldamento","pyramid":false,"items":[{"id":"ex_vdlb3b","name":"Tapis roulant","scheme":"8 min","choice":false,"type":"cardio","durationMin":8}]},{"id":"g_niuab8","note":"Core","pyramid":false,"items":[{"id":"ex_856309","name":"Chest press","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_rri2a8","name":"Pectoral","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_5w4tmd","name":"Pulldown","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_z0u4c5","name":"Low row","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_jksxwc","name":"Leg extension","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_vzw9sw","name":"Leg curl","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_amb737","name":"Lento manubri","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_metbep","name":"Bicipiti manubri","choice":false,"rest":50,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_1bljww","name":"Tricipiti","choice":false,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"}]},{"id":"g_8y8gmo","note":"Addominali","pyramid":false,"items":[{"id":"ex_0x7wls","name":"Crunch","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10},{"id":"ex_p0hpnq","name":"Bassi","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10}]},{"id":"g_xq6ckd","note":"Cardio","pyramid":false,"items":[{"id":"ex_727k5f","name":"Cyclette","scheme":"35 min","choice":false,"type":"cardio","durationMin":35}]}],"weekMeta":{"1":{"num":"Giorno 2","focus":"Total Body"},"2":{"num":"Giorno 2","focus":"Total Body"},"3":{"num":"Giorno 2","focus":"Total Body"}}},{"id":"d_4w8atz","num":"Giorno 2","focus":"Dorso - Bicipiti","groups":[{"id":"g_obzg36","note":"Riscaldamento","pyramid":false,"items":[{"id":"ex_tfttk1","name":"Tapis Roulant","scheme":"8 min","choice":false,"type":"cardio","durationMin":8}]},{"id":"g_bnq77a","note":"Addominali","pyramid":false,"items":[{"id":"ex_dnu0ao","name":"Addominali alti","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_ocokc4","name":"Addominali bassi","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_b1gujb","name":"Libretto","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":15}]},{"id":"g_xe8e6z","note":"Cardio","pyramid":false,"items":[{"id":"ex_x0h7zj","name":"Cyclette","scheme":"45 min","choice":false,"type":"cardio","durationMin":45}]}],"weekMeta":{"1":{"num":"Giorno 2","focus":"Dorso & Bicipiti"},"2":{"num":"Giorno 2","focus":"Dorso & Bicipiti"},"3":{"num":"Giorno 2","focus":"Dorso & Bicipiti"}}},{"id":"d_nevahg","num":"Giorno 3","focus":"Gambe & Spalle","groups":[{"id":"g_g0b86c","note":"Riscaldamento","pyramid":false,"items":[{"id":"ex_qn9fno","name":"Tapis Roulant","scheme":"8 min","choice":false,"type":"cardio","durationMin":8}]},{"id":"g_02bvcw","note":"Addominali","pyramid":false,"items":[{"id":"ex_v4zzhi","name":"Addominali alti","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_lgr5a2","name":"Addominali bassi","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_jvxsty","name":"Libretto","choice":false,"rest":50,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":15}]},{"id":"g_kkouvo","note":"Cardio","pyramid":false,"items":[{"id":"ex_n0ynob","name":"Cyclette","scheme":"45 min","choice":false,"type":"cardio","durationMin":45}]}]},{"id":"d_yc5cfl","num":"Giorno 2","focus":"Dorso & Bicipiti","groups":[{"id":"g_wxw3fb","note":"Riscaldamento","pyramid":false,"items":[{"id":"ex_i2uh43","name":"Tapis Roulant","scheme":"8 min","choice":false,"type":"cardio","durationMin":8}]},{"id":"g_prjboe","note":"Dorso principale","pyramid":false,"items":[{"id":"ex_1gshkr","name":"Lat machine presa stretta","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":3,"weightMode":"fixed"}]},{"id":"g_ywkai0","note":"Dorso (2 a scelta)","pyramid":false,"items":[{"id":"ex_02o90t","name":"Pulley","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_b3r8jz","name":"Ramate manubri","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_vpsdxb","name":"Remate bilanciere","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_guo4eg","name":"Pullover cavi","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"}]},{"id":"g_iyf2az","note":"Bicipiti (2 a scelta)","pyramid":false,"items":[{"id":"ex_ydx3t2","name":"Curl bilanciere","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_hlcofk","name":"Curl manubri alti","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_28ox7n","name":"Curl concentrato","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_ctuefx","name":"Curl cavi","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"}]},{"id":"g_m00ex2","note":"Addominali","pyramid":false,"items":[{"id":"ex_2s2xbe","name":"Crunch alti","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_izsysb","name":"Crunch bassi","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_bprrdj","name":"Libretto","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":15}]},{"id":"g_1s00c9","note":"Cardio","pyramid":false,"items":[{"id":"ex_jjxy6o","name":"Cyclette","scheme":"45 min","choice":false,"type":"cardio","durationMin":45}]}]},{"id":"d_n9od31","num":"Giorno 3","focus":"Gambe & Spalle","groups":[{"id":"g_5znwd1","note":"Riscaldamento","pyramid":false,"items":[{"id":"ex_mq1h9z","name":"Tapis Roulant","scheme":"8 min","choice":false,"type":"cardio","durationMin":8}]},{"id":"g_4mnxsv","note":"Gambe principale","pyramid":false,"items":[{"id":"ex_598gn1","name":"Pressa","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":3,"weightMode":"fixed"}]},{"id":"g_b74ngy","note":"Gambe (2 a scelta)","pyramid":false,"items":[{"id":"ex_9ihpct","name":"Leg extension","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_zarac3","name":"Leg curl","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_314hja","name":"Stacchi gambe tese","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_rpaoz3","name":"Affondi in camminata","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"}]},{"id":"g_s1pj9c","note":"Spalle","pyramid":false,"items":[{"id":"ex_uh6hr7","name":"Alzate laterali","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_t3zq5x","name":"Tirate al mento","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_7gnzao","name":"Alzate laterali 90°","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_tj5oj8","name":"Alzate laterali cavi","choice":false,"rest":60,"type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10,"weightMode":"fixed"},{"id":"ex_qann81","name":"Spinte manubri 90°","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10},{"id":"ex_9lidfl","name":"Scrollate","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10},{"id":"ex_ptcp35","name":"Alzate frontali manubri","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":10}]},{"id":"g_gwu89g","note":"Addominali","pyramid":false,"items":[{"id":"ex_c0xtg4","name":"Crunch alti","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_al0hyo","name":"Crunch bassi","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":20},{"id":"ex_z87mn6","name":"Libretto","choice":false,"rest":60,"type":"bodyweight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":15}]},{"id":"g_k2qvkf","note":"Cardio","pyramid":false,"items":[{"id":"ex_4lmmdq","name":"Cyclette","scheme":"45 min","choice":false,"type":"cardio","durationMin":45}]},{"id":"g_fued1m","note":"Spalle principale","pyramid":false,"items":[{"id":"ex_uc14qh","choice":false,"name":"Military press","type":"weight","setsMode":"fixed","setsCount":3,"repsMode":"fixed","repsCount":3,"weightMode":"fixed","rest":60}]}]}],"schede":[{"id":"s_is8o0s","name":"Total Body","color":"day2","dayIds":[],"weekDayIds":{"1":["d_he6tyj","d_b4yfk8"],"2":["d_he6tyj","d_b4yfk8"],"3":["d_he6tyj","d_b4yfk8"]}},{"id":"s2","name":"Scheda Split","color":"#EE5A45","dayIds":["d1","d2","d3"],"weekDayIds":{"1":["d1","d_yc5cfl","d_n9od31"],"2":["d1","d_yc5cfl","d_n9od31"],"3":["d1","d_yc5cfl","d_n9od31"]}}],"currentScheda":"s_is8o0s"};
 function loadState(){
   let saved = null;
   try{ saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); }catch(e){}
+  if(!saved) return mergeLoadedState(JSON.parse(JSON.stringify(PREVIEW_BACKUP_STATE)));
   return mergeLoadedState(saved);
 }
 let state = loadState();
 function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function uid(p){ return p + '_' + Math.random().toString(36).slice(2,8); }
+
+/* =========================================================
+   TEMA (chiaro / scuro / sistema)
+   ========================================================= */
+const systemDarkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function effectiveTheme(){
+  if(state.theme==='dark') return 'dark';
+  if(state.theme==='light') return 'light';
+  return (systemDarkQuery && systemDarkQuery.matches) ? 'dark' : 'light';
+}
+function applyTheme(){
+  const eff = effectiveTheme();
+  if(eff==='dark') document.documentElement.setAttribute('data-theme','dark');
+  else document.documentElement.removeAttribute('data-theme');
+  document.querySelectorAll('.theme-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.themeChoice===state.theme);
+  });
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if(metaTheme) metaTheme.setAttribute('content', eff==='dark' ? '#16181C' : '#EEF1F5');
+}
+applyTheme();
+if(systemDarkQuery){
+  const onSystemChange = ()=>{ if(state.theme==='system') applyTheme(); };
+  if(systemDarkQuery.addEventListener) systemDarkQuery.addEventListener('change', onSystemChange);
+  else if(systemDarkQuery.addListener) systemDarkQuery.addListener(onSystemChange);
+}
 
 /* =========================================================
    HELPERS DATI
@@ -2244,12 +2308,14 @@ function renderAll(){
     document.getElementById('statsView').style.display='none';
     document.getElementById('navTrain').classList.add('active');
     document.getElementById('navStats').classList.remove('active');
+    document.getElementById('settingsFooter').style.display='none';
     renderDayTabs(); renderWeekStrip(); renderExercises();
   } else {
     document.getElementById('trainView').style.display='none';
     document.getElementById('statsView').style.display='block';
     document.getElementById('navTrain').classList.remove('active');
     document.getElementById('navStats').classList.add('active');
+    document.getElementById('settingsFooter').style.display='flex';
     renderStats();
   }
 }
@@ -2264,6 +2330,14 @@ document.getElementById('editToggle').addEventListener('click', ()=>{
 });
 document.getElementById('navTrain').addEventListener('click', ()=>{ currentView='train'; renderAll(); });
 document.getElementById('navStats').addEventListener('click', ()=>{ currentView='stats'; renderAll(); });
+
+document.querySelectorAll('.theme-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    state.theme = btn.dataset.themeChoice;
+    saveState();
+    applyTheme();
+  });
+});
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
   const blob=new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
