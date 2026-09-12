@@ -788,6 +788,57 @@ function recommendedWeight(exId, week, group){
   return prev + recommendedIncrement(group);
 }
 
+function weightValueForWeek(exId, week){
+  const w = state.weights[exId]; if(!w) return undefined;
+  return weekRepValue(w[String(week)]);
+}
+function lastLoggedBeforeWithWeek(exId, week){
+  const w = state.weights[exId]; if(!w) return undefined;
+  for(let i=week-1;i>=1;i--){
+    const v = weekRepValue(w[String(i)]);
+    if(v!==undefined) return { week:i, value:v };
+  }
+  return undefined;
+}
+function dayNumberLabel(day, week){
+  const meta = effectiveDayMeta(day, week);
+  const m = String((meta && meta.num) || '').match(/\d+/);
+  return m ? m[0] : ((meta && meta.num) || '');
+}
+function sameNamePreviousDayValue(it, day, week){
+  const name = (it.name||'').trim().toLowerCase();
+  if(!name) return undefined;
+  const list = visibleDaysForCurrentScheda();
+  const idx = list.findIndex(d=>d.id===day.id);
+  if(idx <= 0) return undefined;
+  for(let i=idx-1; i>=0; i--){
+    const candidateDay = list[i];
+    for(const g of candidateDay.groups){
+      for(const cand of g.items){
+        if(cand.id===it.id) continue;
+        if((cand.type||'weight')!=='weight') continue;
+        if((cand.name||'').trim().toLowerCase() !== name) continue;
+        const val = weightValueForWeek(cand.id, week);
+        if(val !== undefined){
+          return { dayNum: dayNumberLabel(candidateDay, week), value: val };
+        }
+      }
+    }
+  }
+  return undefined;
+}
+function exerciseHistoryBadge(it, day, week){
+  const dayMatch = sameNamePreviousDayValue(it, day, week);
+  if(dayMatch && dayMatch.dayNum!==''){
+    return `G${dayMatch.dayNum} ${fmt(dayMatch.value)}kg`;
+  }
+  const weekMatch = lastLoggedBeforeWithWeek(it.id, week);
+  if(weekMatch){
+    return `S${weekMatch.week} ${fmt(weekMatch.value)}kg`;
+  }
+  return null;
+}
+
 function rpeLabel(v){
   if(v===undefined) return '';
   if(v<=2) return 'Leggero';
@@ -1798,6 +1849,7 @@ function renderExercises(){
       const sugg = (exType==='weight' && !isVariable) ? recommendedWeight(it.id, state.currentWeek, group) : undefined;
       const rpeVal = getRPE(it.id, state.currentWeek);
       const hasData = (w!==undefined) || hasVariableLog || (rpeVal!==undefined);
+      const historyBadgeText = (exType==='weight') ? exerciseHistoryBadge(it, day, state.currentWeek) : null;
 
       const card=document.createElement('div');
       card.className = (group.pyramid ? 'pyramid-card' : ('ex-card'+(it.choice?' choice':''))) + (hasData?'':' no-data');
@@ -1825,11 +1877,14 @@ function renderExercises(){
         ? `<span class="hist-chip clickable" data-restedit="${it.id}">⏱ ${it.rest ? it.rest+'″ recupero' : 'imposta recupero'}</span>`
         : (it.rest ? `<span class="hist-chip">⏱ ${it.rest}″ recupero</span>` : '');
 
+      const historyChip = historyBadgeText ? `<span class="hist-chip history-chip">${historyBadgeText}</span>` : '';
+
       const infoHtml = `
         <div class="ex-info">
           <div class="ex-name-row">${nameHtml} ${isPR?'<span class="trophy">🏆</span>':''}</div>
           <div class="ex-scheme-row">
             <span class="ex-scheme">${schemeText}</span>
+            ${historyChip}
             ${restChip}
           </div>
           ${noteHtmlBlock}
